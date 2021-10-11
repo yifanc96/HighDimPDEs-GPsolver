@@ -7,9 +7,6 @@ config.update("jax_enable_x64", True)
 # numpy
 import numpy as onp
 
-# Plot
-import matplotlib.pyplot as plt
-
 import logging
 # up to 2nd derivatives
         
@@ -166,7 +163,7 @@ def one_step_iteration(V_future, X_future, X_now, dt, sigma, nugget, GN_step):
     for i in range(GN_step):
         # get grad V_{old}
         V_old = V_val_n_grad[:N_domain]
-        logger.info(f'GN step: {i} and sol val at 1st point {V_old[0]}')
+        logger.info(f'  [logs] GN step: {i}, and sol val at the 1st point {V_old[0]}')
         V_old_grad = onp.reshape(V_val_n_grad[N_domain:],(N_domain,d))
         
         w1 = 2*V_old_grad+(X_future-X_now)
@@ -188,15 +185,15 @@ def GPsolver(X_init, N_domain, dt, T, sigma, nugget, GN_step = 4):
     
     # solve V[-i-1,:] from V[-i,:]
     for i in onp.arange(1,Nt):
+        logger.info(f'[Time marching] at iteration {i}/{Nt-1}, solving eqn at time t = {t:.2f}')
         V[-i-1,:] = one_step_iteration(V[-i,:], arr_X[-i,:,:], arr_X[-i-1,:,:], dt, sigma, nugget, GN_step)
-        if i % 10 ==0:
-            logger.info(f'time t = {(Nt-i)*dt} solved')
+        t = (Nt-i-1)*dt
     return V
 
 
 d = 100
 X_init = onp.zeros((1,d))
-N_domain = 2000
+N_domain = 1000
 dt = 1e-2
 T = 1
 
@@ -209,7 +206,6 @@ logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s [%(levelname)s] %(message)s",
         handlers=[
-            logging.FileHandler(f'nugget{nugget}sigma{ratio}N{N_domain}'+'.log'),
             logging.StreamHandler()]
         )
 logger=logging.getLogger()
