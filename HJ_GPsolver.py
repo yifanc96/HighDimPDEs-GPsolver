@@ -161,7 +161,7 @@ def GPsolver(X_init, N_domain, dt, T, sigma, nugget, GN_step = 4):
     return V
 
 def logger(args, level = 'INFO'):
-    log_root = args.logroot
+    log_root = args.logroot + 'HJ'
     log_name = 'dim' + str(args.dim) + '_kernel' + str(args.kernel)
     logdir = os.path.join(log_root, log_name)
     os.makedirs(logdir, exist_ok=True)
