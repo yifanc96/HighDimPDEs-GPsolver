@@ -121,7 +121,7 @@ def one_step_iteration(V_future, X_future, X_now, dt, sigma, nugget, GN_step):
     Theta_train = assembly_Theta_stanGP(X_future,sigma)
     Theta_infer = assembly_Theta_predict_value_and_grad_stanGP(X_now, X_future,sigma)
     
-    V_val_n_grad = Theta_infer @ (onp.linalg.solve(Theta_train + nugget*onp.eye(onp.shape(Theta_train)[0]),V_future))
+    V_val_n_grad = Theta_infer @ (onp.linalg.solve(Theta_train + nugget*onp.diag(onp.diag(Theta_train)),V_future))
     w0 = onp.ones((N_domain,1))
     for i in range(GN_step):
         # get grad V_{old}
@@ -133,7 +133,7 @@ def one_step_iteration(V_future, X_future, X_now, dt, sigma, nugget, GN_step):
         Theta_train = assembly_Theta(X_now, w0, w1, sigma)
         Theta_infer = assembly_Theta_value_and_grad_predict(X_now, X_now, w0, w1, sigma)
         rhs = V_future + onp.sum(V_old_grad**2,axis=1)*dt
-        V_val_n_grad = Theta_infer @ (onp.linalg.solve(Theta_train + nugget*onp.eye(onp.shape(Theta_train)[0]),rhs))
+        V_val_n_grad = Theta_infer @ (onp.linalg.solve(Theta_train + nugget*onp.diag(onp.diag(Theta_train)),rhs))
     
     return V_val_n_grad[:N_domain]
 
@@ -165,7 +165,7 @@ def logger(args, level = 'INFO'):
     log_name = 'dim' + str(args.dim) + '_kernel' + str(args.kernel)
     logdir = os.path.join(log_root, log_name)
     os.makedirs(logdir, exist_ok=True)
-    log_para = 'sigma-scale' + str(args.sigma_scale) + '_Ndomain' + str(args.N_domain) + '_dt' + str(args.dt).replace(".","") + '_nugget' + str(args.nugget).replace(".","")
+    log_para = 'sigma-scale' + str(args.sigma_scale) + '_Ndomain' + str(args.N_domain) + '_dt' + str(args.dt).replace(".","") + '_diag-nugget' + str(args.nugget).replace(".","")
     date = str(datetime.datetime.now())
     log_base = date[date.find("-"):date.rfind(".")].replace("-", "").replace(":", "").replace(" ", "_")
     filename = log_para + '_' + log_base + '.log'

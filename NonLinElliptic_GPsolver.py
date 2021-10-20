@@ -115,7 +115,7 @@ def GPsolver(X_domain, X_boundary, sigma, nugget, sol_init, GN_step = 4):
         Theta_test = assembly_Theta_value_predict(X_domain, X_domain, X_boundary, w0, w1, sigma)
         rhs = rhs_f + alpha*(m-1)*(sol**m)
         rhs = onp.concatenate((rhs, bdy_g), axis = 0)
-        sol = Theta_test @ (onp.linalg.solve(Theta_train + nugget*onp.eye(onp.shape(Theta_train)[0]),rhs))
+        sol = Theta_test @ (onp.linalg.solve(Theta_train + nugget*onp.diag(onp.diag(Theta_train)),rhs))
         total_mins = (time() - time_begin) / 60
         logging.info(f'[Timer] GP iteration {i+1}/{GN_step}, finished in {total_mins:.2f} minutes')
     return sol
