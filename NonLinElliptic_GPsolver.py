@@ -15,6 +15,7 @@ import datetime
 from time import time
 import os
 
+# solving -Delta u + alpha u^m = f
 def get_parser():
     parser = argparse.ArgumentParser(description='NonLinElliptic equation GP solver')
     parser.add_argument("--alpha", type=float, default = 1.0)
