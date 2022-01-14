@@ -22,11 +22,12 @@ def get_parser():
     parser.add_argument("--alpha", type=float, default = 1.0)
     parser.add_argument("--m", type = int, default = 3)
     parser.add_argument("--dim", type = int, default = 5)
-    parser.add_argument("--kernel", type=str, default="periodic_kernel")
+    parser.add_argument("--kernel", type=str, default="inv_quadratics", choices=["gaussian","inv_quadratics"])
     parser.add_argument("--sigma-scale", type = float, default = 0.25)
     # sigma = args.sigma-scale*sqrt(dim)
     
     parser.add_argument("--N_domain", type = int, default = 1000)
+    parser.add_argument("--N_boundary", type = int, default = 200)
     parser.add_argument("--nugget", type = float, default = 1e-10)
     parser.add_argument("--GNsteps", type = int, default = 4)
     parser.add_argument("--logroot", type=str, default='./logs/')
@@ -143,7 +144,7 @@ def sample_points(N_domain, N_boundary, d, choice = 'random'):
     return X_domain, X_boundary
 
 def logger(args, level = 'INFO'):
-    log_root = args.logroot + 'NonVarLinElliptic_torus'
+    log_root = args.logroot + 'NonVarLinElliptic'
     log_name = 'dim' + str(args.dim) + '_kernel' + str(args.kernel)
     logdir = os.path.join(log_root, log_name)
     os.makedirs(logdir, exist_ok=True)
