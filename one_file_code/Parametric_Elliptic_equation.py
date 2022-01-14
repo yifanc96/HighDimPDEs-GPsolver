@@ -11,7 +11,7 @@ from numpy import random
 import logging
 from time import time
 
-
+###### just copied from NonLinElliptic, not modified yet
 def kappa(x,y,d,sigma):
     dist2 = sum((x-y)**2)
     return jnp.exp(-dist2/(2*sigma**2))
