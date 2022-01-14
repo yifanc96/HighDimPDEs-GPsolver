@@ -14,7 +14,7 @@ import datetime
 from time import time
 import os
 
-# solving -grad(a*grad u) + alpha u^m = f on torus, to be completed
+# solving -grad(a*grad u) + alpha u^m = f on unit ball
 def get_parser():
     parser = argparse.ArgumentParser(description='NonLinElliptic equation GP solver')
     parser.add_argument("--freq_a", type=float, default = 1.0)
