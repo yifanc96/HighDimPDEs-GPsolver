@@ -171,11 +171,11 @@ if __name__ == '__main__':
     logging.info(f'argument is {args}')
     
     def a(x):
-        return jnp.exp(jnp.sin(jnp.sum(args.freq_a * x)))
+        return jnp.exp(jnp.sin(jnp.sum(args.freq_a * jnp.cos(x))))
     def grad_a(x):
         return grad(a)(x)
     def u(x):
-        return jnp.sin(jnp.sum(args.freq_u * x))
+        return jnp.sin(jnp.sum(args.freq_u * jnp.cos(x)))
     def f(x):
         return -a(x) * jnp.trace(hessian(u)(x))+ jnp.sum(grad(a)(x) * grad(u)(x)) + alpha*(u(x)**m)
     def g(x):
