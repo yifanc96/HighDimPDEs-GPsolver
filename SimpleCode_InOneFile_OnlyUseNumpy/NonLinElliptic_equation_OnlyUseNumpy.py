@@ -6,7 +6,7 @@ from numpy import random
 import logging
 from time import time
 
-from autograd import hessian
+# when using numpy for vectorization, must pay attention to a vector being row or column type; very important
 
 def kappa(x,y,d,sigma):
     dist2 = np.sum((x-y)**2,axis=-1,keepdims=True)
