@@ -1,5 +1,5 @@
 import jax.numpy as jnp
-from jax import vmap
+from jax import vmap, jit
 
 from jax.config import config; 
 config.update("jax_enable_x64", True)
@@ -66,13 +66,13 @@ def Delta_x_Delta_y_kappa(x,y,sigma):
     dist2 = sum((x-y)**2)
     val = ((sigma**4)*d*(2+d)-2*(sigma**2)*(2+d)*dist2+dist2**2)/(sigma**8)*jnp.exp(-dist2/(2*sigma**2))
     return val
-
+@jit
 def get_GNkernel_train(x,y,wx0,wx1,wy0,wy1,d,sigma):
     return wx0*wy0*kappa(x,y,d,sigma) + wx0*D_wy_kappa(x,y,d, sigma,wy1) + wy0* D_wx_kappa(x,y,d, sigma,wx1) + D_wx_D_wy_kappa(x,y,d,sigma,wx1,wy1)
-
+@jit
 def get_GNkernel_val_predict(x,y,wy0,wy1,d,sigma):
     return wy0*kappa(x,y,d,sigma) + D_wy_kappa(x,y,d, sigma,wy1)
-
+@jit
 def get_GNkernel_grad_predict(x,y,wy0,wy1,d,sigma):
     return wy0*D_x_kappa(x,y,d, sigma) + D_x_D_wy_kappa(x,y,d,sigma,wy1)
 

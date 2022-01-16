@@ -1,5 +1,5 @@
 import jax.numpy as jnp
-from jax import grad, vmap, hessian
+from jax import grad, vmap, hessian, jit
 
 from jax.config import config; 
 config.update("jax_enable_x64", True)
@@ -21,7 +21,7 @@ def get_parser():
     parser.add_argument("--freq_u", type=float, default = 4.0)
     parser.add_argument("--alpha", type=float, default = 1.0)
     parser.add_argument("--m", type = int, default = 3)
-    parser.add_argument("--dim", type = int, default = 5)
+    parser.add_argument("--dim", type = int, default = 8)
     parser.add_argument("--kernel", type=str, default="inv_quadratics", choices=["gaussian","inv_quadratics"])
     parser.add_argument("--sigma-scale", type = float, default = 0.25)
     # sigma = args.sigma-scale*sqrt(dim)
@@ -32,17 +32,18 @@ def get_parser():
     parser.add_argument("--GNsteps", type = int, default = 4)
     parser.add_argument("--logroot", type=str, default='./logs/')
     parser.add_argument("--randomseed", type=int, default=1)
-    parser.add_argument("--num_exp", type=int, default=5)
+    parser.add_argument("--num_exp", type=int, default=2)
     args = parser.parse_args()    
     return args
 
+@jit
 def get_GNkernel_train(x,y,wx0,wx1,wxg,wy0,wy1,wyg,d,sigma):
     # wx0 * delta_x + wxg * nabla delta_x + wx1 * Delta delta_x 
     return wx0*wy0*kappa(x,y,d,sigma) + wx0*wy1*Delta_y_kappa(x,y,d,sigma) + wy0*wx1*Delta_x_kappa(x,y,d,sigma) + wx1*wy1*Delta_x_Delta_y_kappa(x,y,d,sigma) + wx0*D_wy_kappa(x,y,d,sigma,wyg) + wy0*D_wx_kappa(x,y,d,sigma,wxg) + wx1*Delta_x_D_wy_kappa(x,y,d,sigma,wyg) + wy1*D_wx_Delta_y_kappa(x,y,d,sigma,wxg) + D_wx_D_wy_kappa(x,y,d,sigma,wxg,wyg)
-
+@jit
 def get_GNkernel_train_boundary(x,y,wy0,wy1,wyg,d,sigma):
     return wy0*kappa(x,y,d,sigma) + wy1*Delta_y_kappa(x,y,d,sigma) + D_wy_kappa(x,y,d,sigma,wyg)
-
+@jit
 def get_GNkernel_val_predict(x,y,wy0,wy1,wyg,d,sigma):
     return wy0*kappa(x,y,d,sigma) + wy1*Delta_y_kappa(x,y,d,sigma) + D_wy_kappa(x,y,d,sigma,wyg)
 
@@ -86,7 +87,7 @@ def assembly_Theta(X_domain, X_boundary, w0, w1, wg, sigma):
     val = vmap(lambda x,y: kappa(x,y,d,sigma))(XbXb0, XbXb1)
     Theta[N_domain:,N_domain:] = onp.reshape(val, (N_boundary, N_boundary))
     return Theta
-    
+
 def assembly_Theta_value_predict(X_infer, X_domain, X_boundary, w0, w1, wg, sigma):
     N_infer, d = onp.shape(X_infer)
     N_domain, _ = onp.shape(X_domain)
@@ -170,14 +171,19 @@ if __name__ == '__main__':
     filename = logger(args, level = 'INFO')
     logging.info(f'argument is {args}')
     
+    @jit
     def a(x):
         return jnp.exp(jnp.sin(jnp.sum(args.freq_a * jnp.cos(x))))
+    @jit
     def grad_a(x):
         return grad(a)(x)
+    @jit
     def u(x):
         return jnp.sin(jnp.sum(args.freq_u * jnp.cos(x)))
+    @jit
     def f(x):
         return -a(x) * jnp.trace(hessian(u)(x))+ jnp.sum(grad(a)(x) * grad(u)(x)) + alpha*(u(x)**m)
+    @jit
     def g(x):
         return u(x)
     

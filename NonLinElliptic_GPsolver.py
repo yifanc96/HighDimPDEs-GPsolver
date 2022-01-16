@@ -1,5 +1,5 @@
 import jax.numpy as jnp
-from jax import grad, vmap, hessian
+from jax import grad, vmap, hessian, jit
 
 import jax.ops as jop
 from jax.config import config; 
@@ -34,12 +34,13 @@ def get_parser():
     args = parser.parse_args()    
     return args
 
+@jit
 def get_GNkernel_train(x,y,wx0,wx1,wy0,wy1,d,sigma):
     return wx0*wy0*kappa(x,y,d,sigma) + wx0*wy1*Delta_y_kappa(x,y,d,sigma) + wy0*wx1*Delta_x_kappa(x,y,d,sigma) + wx1*wy1*Delta_x_Delta_y_kappa(x,y,d,sigma)
-
+@jit
 def get_GNkernel_train_boundary(x,y,wy0,wy1,d,sigma):
     return wy0*kappa(x,y,d,sigma) + wy1*Delta_y_kappa(x,y,d,sigma)
-
+@jit
 def get_GNkernel_val_predict(x,y,wy0,wy1,d,sigma):
     return wy0*kappa(x,y,d,sigma) + wy1*Delta_y_kappa(x,y,d,sigma)
 

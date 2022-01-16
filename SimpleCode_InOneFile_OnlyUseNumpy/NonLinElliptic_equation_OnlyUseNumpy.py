@@ -155,7 +155,7 @@ if __name__ == '__main__':
     set_random_seeds(randomseed)
     logging.info(f"[Seeds] random seeds: {randomseed}")
 
-    d = 4
+    d = 10
     N_domain = 1000
     N_boundary = 200
     X_domain, X_boundary = sample_points(N_domain, N_boundary, d, choice = 'random')
