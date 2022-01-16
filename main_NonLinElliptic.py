@@ -20,14 +20,14 @@ def get_parser():
     parser = argparse.ArgumentParser(description='NonLinElliptic equation GP solver')
     parser.add_argument("--alpha", type=float, default = 1.0)
     parser.add_argument("--m", type = int, default = 3)
-    parser.add_argument("--dim", type = int, default = 10)
-    parser.add_argument("--kernel", type=str, default="inv_quadratics", choices=["gaussian","inv_quadratics"])
+    parser.add_argument("--dim", type = int, default = 2)
+    parser.add_argument("--kernel", type=str, default="inv_quadratics", choices=["gaussian","inv_quadratics","Matern_3half","Matern_5half","Matern_7half","Matern_9half","Matern_11half"])
     parser.add_argument("--sigma-scale", type = float, default = 0.25)
     # sigma = args.sigma-scale*sqrt(dim)
     
     parser.add_argument("--N_domain", type = int, default = 1000)
     parser.add_argument("--N_boundary", type = int, default = 200)
-    parser.add_argument("--nugget", type = float, default = 1e-6)
+    parser.add_argument("--nugget", type = float, default = 1e-10)
     parser.add_argument("--GNsteps", type = int, default = 4)
     parser.add_argument("--logroot", type=str, default='./logs/')
     parser.add_argument("--randomseed", type=int, default=9999)
@@ -179,6 +179,16 @@ if __name__ == '__main__':
         from kernels.Gaussian_kernel import *
     elif args.kernel == "inv_quadratics":
         from kernels.inv_quadratics import *
+    elif args.kernel == "Matern_3half":
+        from kernels.Matern_3half import *
+    elif args.kernel == "Matern_5half":
+        from kernels.Matern_5half import *
+    elif args.kernel == "Matern_7half":
+        from kernels.Matern_7half import *
+    elif args.kernel == "Matern_9half":
+        from kernels.Matern_9half import *
+    elif args.kernel == "Matern_11half":
+        from kernels.Matern_11half import *
 
     d = args.dim
     N_domain = args.N_domain

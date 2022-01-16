@@ -21,8 +21,8 @@ def get_parser():
     parser.add_argument("--freq_u", type=float, default = 4.0)
     parser.add_argument("--alpha", type=float, default = 1.0)
     parser.add_argument("--m", type = int, default = 3)
-    parser.add_argument("--dim", type = int, default = 8)
-    parser.add_argument("--kernel", type=str, default="inv_quadratics", choices=["gaussian","inv_quadratics"])
+    parser.add_argument("--dim", type = int, default = 1)
+    parser.add_argument("--kernel", type=str, default="inv_quadratics", choices=["gaussian","inv_quadratics","Matern_3half","Matern_5half","Matern_7half","Matern_9half","Matern_11half"])
     parser.add_argument("--sigma-scale", type = float, default = 0.25)
     # sigma = args.sigma-scale*sqrt(dim)
     
@@ -173,13 +173,13 @@ if __name__ == '__main__':
     
     @jit
     def a(x):
-        return jnp.exp(jnp.sin(jnp.sum(args.freq_a * jnp.cos(x))))
+        return jnp.exp(jnp.sin(jnp.sum(args.freq_a * jnp.cos(2*jnp.pi*x))))
     @jit
     def grad_a(x):
         return grad(a)(x)
     @jit
     def u(x):
-        return jnp.sin(jnp.sum(args.freq_u * jnp.cos(x)))
+        return jnp.sin(jnp.sum(args.freq_u * jnp.cos(2*jnp.pi*x)))
     @jit
     def f(x):
         return -a(x) * jnp.trace(hessian(u)(x))+ jnp.sum(grad(a)(x) * grad(u)(x)) + alpha*(u(x)**m)
@@ -197,6 +197,17 @@ if __name__ == '__main__':
         from kernels.Gaussian_kernel import *
     elif args.kernel == "inv_quadratics":
         from kernels.inv_quadratics import *
+    elif args.kernel == "Matern_3half":
+        from kernels.Matern_3half import *
+    elif args.kernel == "Matern_5half":
+        from kernels.Matern_5half import *
+    elif args.kernel == "Matern_7half":
+        from kernels.Matern_7half import *
+    elif args.kernel == "Matern_9half":
+        from kernels.Matern_9half import *
+    elif args.kernel == "Matern_11half":
+        from kernels.Matern_11half import *
+    
     d = args.dim
     N_domain = args.N_domain
     N_boundary = args.N_boundary
