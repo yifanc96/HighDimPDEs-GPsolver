@@ -21,7 +21,7 @@ def get_parser():
     parser.add_argument("--freq_u", type=float, default = 4.0)
     parser.add_argument("--alpha", type=float, default = 1.0)
     parser.add_argument("--m", type = int, default = 3)
-    parser.add_argument("--dim", type = int, default = 1)
+    parser.add_argument("--dim", type = int, default = 4)
     parser.add_argument("--kernel", type=str, default="periodic")
     parser.add_argument("--sigma-scale", type = float, default = 0.25)
     # sigma = args.sigma-scale*sqrt(dim)
