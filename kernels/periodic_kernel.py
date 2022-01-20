@@ -7,6 +7,7 @@ def kappa(x,y,d,sigma, p = 1):
     # dist = jnp.sqrt((x-y)**2 + eps)
     # val = jnp.exp((jnp.sum(jnp.cos(p*jnp.pi*dist)-1))/sigma**2)
     # dist = jnp.sum((jnp.cos(2*p*jnp.pi*x)-jnp.cos(2*p*jnp.pi*y))**2)
+    # dist = jnp.sum((jnp.sin(2*p*jnp.pi*x)-jnp.sin(2*p*jnp.pi*y))**2)
     dist = jnp.sum((jnp.cos(2*p*jnp.pi*x)-jnp.cos(2*p*jnp.pi*y))**2 + (jnp.sin(2*p*jnp.pi*x)-jnp.sin(2*p*jnp.pi*y))**2) # simplify it later!
     val = jnp.exp(-dist/sigma**2)
     return val

@@ -25,8 +25,8 @@ def get_parser():
     parser.add_argument("--sigma-scale", type = float, default = 0.25)
     # sigma = args.sigma-scale*sqrt(dim)
     
-    parser.add_argument("--N_domain", type = int, default = 1000)
-    parser.add_argument("--N_boundary", type = int, default = 200)
+    parser.add_argument("--N_domain", type = int, default = 2000)
+    parser.add_argument("--N_boundary", type = int, default = 400)
     parser.add_argument("--nugget", type = float, default = 1e-10)
     parser.add_argument("--GNsteps", type = int, default = 4)
     parser.add_argument("--logroot", type=str, default='./logs/')
