@@ -18,24 +18,25 @@ import os
 # a = a(x,theta)
 def get_parser():
     parser = argparse.ArgumentParser(description='Parametric Elliptic equation GP solver')
-    parser.add_argument("--alpha", type=float, default = 1.0)
+    parser.add_argument("--alpha", type=float, default = 0.0)
     parser.add_argument("--m", type = int, default = 3)
-    parser.add_argument("--dim_x", type = int, default = 2)
+    parser.add_argument("--dim_x", type = int, default = 1)
     parser.add_argument("--dim_theta", type = int, default = 1)
     parser.add_argument("--kernel", type=str, default="anisotripic_Gaussian")
     
     parser.add_argument("--sigma-scale_x", type = float, default = 0.25)
-    parser.add_argument("--sigma-scale_theta", type = float, default = 0.1)
+    parser.add_argument("--sigma-scale_theta", type = float, default = 0.2)
     # sigma_x = args.sigma-scale_x*sqrt(dim)
     # sigma_theta = args.sigma-scale_theta*sqrt(dim)
     
-    parser.add_argument("--N_domain", type = int, default = 2000)
-    parser.add_argument("--N_boundary", type = int, default = 400)
-    parser.add_argument("--nugget", type = float, default = 1e-10)
-    parser.add_argument("--GNsteps", type = int, default = 4)
+    parser.add_argument("--N_domain", type = int, default = 4000)
+    parser.add_argument("--N_boundary", type = int, default = 800)
+    parser.add_argument("--N_test", type = int, default = 2000)
+    parser.add_argument("--nugget", type = float, default = 1e-6)
+    parser.add_argument("--GNsteps", type = int, default = 1)
     parser.add_argument("--logroot", type=str, default='./logs/')
     parser.add_argument("--randomseed", type=int, default=1)
-    parser.add_argument("--num_exp", type=int, default=4)
+    parser.add_argument("--num_exp", type=int, default=1)
     args = parser.parse_args()    
     return args
 
@@ -115,7 +116,7 @@ def assembly_Theta_value_predict(X_infer, X_domain, X_boundary, w0, w1, wg, sigm
     Theta[:N_infer,N_domain:] = onp.reshape(val, (N_infer,N_boundary))
     return Theta
 
-def GPsolver(X_domain, X_boundary, sigma, nugget, sol_init, GN_step = 4):
+def GPsolver(X_domain, X_boundary, X_test, sigma, nugget, sol_init, GN_step = 4):
     # N_domain, d = onp.shape(X_domain)
     sol = sol_init
     rhs_f = vmap(f)(X_domain[:,:d_x],X_domain[:,d_x:])[:,onp.newaxis]
@@ -134,7 +135,10 @@ def GPsolver(X_domain, X_boundary, sigma, nugget, sol_init, GN_step = 4):
         sol = Theta_test @ (onp.linalg.solve(Theta_train + nugget*onp.diag(onp.diag(Theta_train)),rhs))
         total_mins = (time() - time_begin) / 60
         logging.info(f'[Timer] GP iteration {i+1}/{GN_step}, finished in {total_mins:.2f} minutes')
-    return sol
+    
+    Theta_test = assembly_Theta_value_predict(X_test, X_domain, X_boundary, w0, w1, wg, sigma)
+    sol_test = Theta_test @ (onp.linalg.solve(Theta_train + nugget*onp.diag(onp.diag(Theta_train)),rhs))
+    return sol, sol_test
 
 def sample_points(N_domain, N_boundary, d_x, d_theta, choice = 'random'):
     X_domain = onp.zeros((N_domain,d_x+d_theta))
@@ -164,7 +168,7 @@ def logger(args, level = 'INFO'):
     log_name = 'dim_x' + str(args.dim_x) + 'dim_theta' + str(args.dim_theta) + '_kernel' + str(args.kernel)
     logdir = os.path.join(log_root, log_name)
     os.makedirs(logdir, exist_ok=True)
-    log_para = 'alpha' + str(args.alpha) + 'm' + str(args.m) + 'sigma-scale' + str(args.sigma_scale_x) +'_' +str(args.sigma_scale_theta) + '_Ndomain' + str(args.N_domain) + '_Nbd' + str(args.N_boundary) + '_nugget' + str(args.nugget).replace(".","") + '_numexp' + str(args.num_exp)
+    log_para = 'alpha' + str(args.alpha) + 'm' + str(args.m) + 'sigma-scale' + str(args.sigma_scale_x) +'_' +str(args.sigma_scale_theta) + '_Nint' + str(args.N_domain) + '_Nbd' + str(args.N_boundary) + '_Ntest' + str(args.N_test) + '_nugget' + str(args.nugget).replace(".","") + '_numexp' + str(args.num_exp)
     date = str(datetime.datetime.now())
     log_base = date[date.find("-"):date.rfind(".")].replace("-", "").replace(":", "").replace(" ", "_")
     filename = log_para + '_' + log_base + '.log'
@@ -192,7 +196,7 @@ if __name__ == '__main__':
     m = args.m
     
     @jit
-    def a(x,theta):
+    def a(x,theta): # exp(sum(sin(x))) * exp(sum(cos(theta)))
         return jnp.exp(jnp.sum(jnp.sin(x))) * jnp.exp(jnp.sum(jnp.cos(theta)))
     @jit
     def gradx_a(x,theta):
@@ -200,6 +204,7 @@ if __name__ == '__main__':
     @jit
     def u(x,theta):
         return jnp.sum(jnp.sin(x)) * jnp.sum(jnp.sin(theta))
+        # return 1.0
     @jit
     def gradx_u(x,theta):
         return grad(u,0)(x,theta)
@@ -221,17 +226,20 @@ if __name__ == '__main__':
     d_theta = args.dim_theta
     N_domain = args.N_domain
     N_boundary = args.N_boundary
+    N_test = args.N_test
     sigma = [args.sigma_scale_x*onp.sqrt(d_x),args.sigma_scale_theta*onp.sqrt(d_theta)]
     nugget = args.nugget
     GN_step = args.GNsteps
 
-    logging.info(f'GN step: {GN_step}, dx: {d_x}, d_theta:{d_theta} sigma: {sigma}, number of points: N_domain {N_domain}, N_boundary {N_boundary}, kernel: {args.kernel}, nugget: {args.nugget}')
+    logging.info(f'GN step: {GN_step}, dx: {d_x}, d_theta:{d_theta} sigma: {sigma}, number of points: N_domain {N_domain}, N_boundary {N_boundary}, N_test {N_test} kernel: {args.kernel}, nugget: {args.nugget}')
     
     
     logging.info(f"***** Total number of random experiments {args.num_exp} *****")
     
-    err_2_all = []
-    err_inf_all = []
+    train_err_2_all = []
+    train_err_inf_all = []
+    test_err_2_all = []
+    test_err_inf_all = []
     for idx_exp in range(args.num_exp):
         logging.info(f"[Experiment] number: {idx_exp}")
         args.randomseed = idx_exp
@@ -239,24 +247,38 @@ if __name__ == '__main__':
         logging.info(f"[Seeds] random seeds: {args.randomseed}")
         
         X_domain, X_boundary = sample_points(N_domain, N_boundary, d_x, d_theta, choice = 'random')
+        X_test, _ = sample_points(N_test, N_boundary, d_x, d_theta, choice = 'random')
         
         sol_init = onp.random.randn(args.N_domain,1)
         
-        sol = GPsolver(X_domain, X_boundary, sigma, nugget, sol_init, GN_step = GN_step)
+        sol, sol_test = GPsolver(X_domain, X_boundary, X_test, sigma, nugget, sol_init, GN_step = GN_step)
 
         logging.info('[Calculating errs at collocation points ...]')
+        
+        
+        # train points
         sol_truth = vmap(u)(X_domain[:,:d_x],X_domain[:,d_x:])[:,onp.newaxis]
         err = abs(sol-sol_truth)
         err_2 = onp.linalg.norm(err,'fro')/(N_domain)
-        err_2_all.append(err_2)
+        train_err_2_all.append(err_2)
         err_inf = onp.max(err)
-        err_inf_all.append(err_inf)
-        logging.info(f'[L infinity error] {err_inf}')
-        logging.info(f'[L2 error] {err_2}')
+        train_err_inf_all.append(err_inf)
+        
+        # test points
+        sol_truth = vmap(u)(X_test[:,:d_x],X_test[:,d_x:])[:,onp.newaxis]
+        err = abs(sol_test-sol_truth)
+        err_2 = onp.linalg.norm(err,'fro')/(N_test)
+        test_err_2_all.append(err_2)
+        err_inf = onp.max(err)
+        test_err_inf_all.append(err_inf)
+        
+        logging.info(f'[L infinity error] train {train_err_inf_all[-1]}, test {test_err_inf_all[-1]}')
+        logging.info(f'[L2 error] train {train_err_2_all[-1]}, test {test_err_2_all[-1]}')
+        
     
-    logging.info(f'[Average L infinity error] {onp.mean(err_inf_all)}')
-    logging.info(f'[Average L2 error] {onp.mean(err_2_all)}')
+    logging.info(f'[Average L infinity error] train {onp.mean(train_err_inf_all)}, test {onp.mean(test_err_inf_all)}')
+    logging.info(f'[Average L2 error] train {onp.mean(train_err_2_all)}, test {onp.mean(test_err_2_all)}')
     
-    onp.savez(filename, Linf = err_inf_all, L2 = err_2_all)
+    onp.savez(filename, trainLinf = train_err_inf_all, trainL2 = train_err_2_all, testLinf = test_err_inf_all, testL2 = test_err_2_all)
     
     
