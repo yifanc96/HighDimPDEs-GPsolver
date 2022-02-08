@@ -34,7 +34,7 @@ def get_parser():
     parser.add_argument("--GNsteps", type = int, default = 4)
     parser.add_argument("--logroot", type=str, default='./logs/')
     parser.add_argument("--randomseed", type=int, default=1)
-    parser.add_argument("--num_exp", type=int, default=2)
+    parser.add_argument("--num_exp", type=int, default=10)
     args = parser.parse_args()    
     return args
 
@@ -117,7 +117,7 @@ def GPsolver(X_domain, X_boundary, X_test, sigma, nugget, sol_init, GN_step = 4)
     sol = sol_init
     rhs_f = vmap(f)(X_domain)[:,onp.newaxis]
     bdy_g = vmap(g)(X_boundary)[:,onp.newaxis]
-    wg = vmap(grad_a)(X_domain) #size?
+    wg = -vmap(grad_a)(X_domain) #size?
     w1 = -vmap(a)(X_domain)[:,onp.newaxis]
     time_begin = time()
     for i in range(GN_step):
@@ -181,7 +181,7 @@ if __name__ == '__main__':
     def u(x):
         return jnp.sin(jnp.sum(args.freq_u * jnp.cos(x)))
     def f(x):
-        return -a(x) * jnp.trace(hessian(u)(x))+ jnp.sum(grad(a)(x) * grad(u)(x)) + alpha*(u(x)**m)
+        return -a(x) * jnp.trace(hessian(u)(x))- jnp.sum(grad(a)(x) * grad(u)(x)) + alpha*(u(x)**m)
     def g(x):
         return u(x)
     
