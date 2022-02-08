@@ -21,7 +21,7 @@ def get_parser():
     parser.add_argument("--freq_u", type=float, default = 4.0)
     parser.add_argument("--alpha", type=float, default = 1.0)
     parser.add_argument("--m", type = int, default = 3)
-    parser.add_argument("--dim", type = int, default = 5)
+    parser.add_argument("--dim", type = int, default = 2)
     parser.add_argument("--kernel", type=str, default="inv_quadratics", choices=["gaussian","inv_quadratics","Matern_3half","Matern_5half","Matern_7half","Matern_9half","Matern_11half"])
     parser.add_argument("--sigma-scale", type = float, default = 0.25)
     # sigma = args.sigma-scale*sqrt(dim)
@@ -117,7 +117,7 @@ def GPsolver(X_domain, X_boundary, X_test, sigma, nugget, sol_init, GN_step = 4)
     sol = sol_init
     rhs_f = vmap(f)(X_domain)[:,onp.newaxis]
     bdy_g = vmap(g)(X_boundary)[:,onp.newaxis]
-    wg = vmap(grad_a)(X_domain) #size?
+    wg = -vmap(grad_a)(X_domain) #size?
     w1 = -vmap(a)(X_domain)[:,onp.newaxis]
     time_begin = time()
     for i in range(GN_step):
@@ -185,7 +185,7 @@ if __name__ == '__main__':
         return jnp.sin(jnp.sum(args.freq_u * jnp.cos(x)))
     @jit
     def f(x):
-        return -a(x) * jnp.trace(hessian(u)(x))+ jnp.sum(grad(a)(x) * grad(u)(x)) + alpha*(u(x)**m)
+        return -a(x) * jnp.trace(hessian(u)(x))- jnp.sum(grad(a)(x) * grad(u)(x)) + alpha*(u(x)**m)
     @jit
     def g(x):
         return u(x)

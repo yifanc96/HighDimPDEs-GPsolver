@@ -91,7 +91,7 @@ def GPsolver(X_domain, sigma, nugget, sol_init, GN_step = 4):
     # N_domain, d = onp.shape(X_domain)
     sol = sol_init
     rhs_f = vmap(f)(X_domain)[:,onp.newaxis]
-    wg = vmap(grad_a)(X_domain) #size?
+    wg = -vmap(grad_a)(X_domain) #size?
     w1 = -vmap(a)(X_domain)[:,onp.newaxis]
     time_begin = time()
     for i in range(GN_step):
@@ -147,7 +147,7 @@ if __name__ == '__main__':
         return jnp.sin(jnp.sum(args.freq_u * jnp.cos(2*jnp.pi*x)))
     @jit
     def f(x):
-        return -a(x) * jnp.trace(hessian(u)(x))+ jnp.sum(grad(a)(x) * grad(u)(x)) + alpha*(u(x)**m)
+        return -a(x) * jnp.trace(hessian(u)(x))-jnp.sum(grad(a)(x) * grad(u)(x)) + alpha*(u(x)**m)
     @jit
     def g(x):
         return u(x)

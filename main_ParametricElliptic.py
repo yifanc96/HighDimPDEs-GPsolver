@@ -121,7 +121,7 @@ def GPsolver(X_domain, X_boundary, X_test, sigma, nugget, sol_init, GN_step = 4)
     sol = sol_init
     rhs_f = vmap(f)(X_domain[:,:d_x],X_domain[:,d_x:])[:,onp.newaxis]
     bdy_g = vmap(g)(X_boundary[:,:d_x],X_boundary[:,d_x:])[:,onp.newaxis]
-    wg = vmap(gradx_a)(X_domain[:,:d_x],X_domain[:,d_x:]) #size?
+    wg = -vmap(gradx_a)(X_domain[:,:d_x],X_domain[:,d_x:]) #size?
 
     w1 = -vmap(a)(X_domain[:,:d_x],X_domain[:,d_x:])[:,onp.newaxis]
     time_begin = time()
@@ -210,7 +210,7 @@ if __name__ == '__main__':
         return grad(u,0)(x,theta)
     @jit
     def f(x,theta):
-        return -a(x,theta) * jnp.trace(hessian(lambda x: u(x,theta))(x))+ jnp.sum(gradx_a(x,theta) * gradx_u(x,theta)) + alpha*(u(x,theta)**m)
+        return -a(x,theta) * jnp.trace(hessian(lambda x: u(x,theta))(x))- jnp.sum(gradx_a(x,theta) * gradx_u(x,theta)) + alpha*(u(x,theta)**m)
     @jit
     def g(x,theta):
         return u(x,theta)
