@@ -22,18 +22,18 @@ def get_parser():
     parser.add_argument("--alpha", type=float, default = 1.0)
     parser.add_argument("--m", type = int, default = 3)
     parser.add_argument("--dim", type = int, default = 2)
-    parser.add_argument("--kernel", type=str, default="inv_quadratics", choices=["gaussian","inv_quadratics","Matern_3half","Matern_5half","Matern_7half","Matern_9half","Matern_11half"])
+    parser.add_argument("--kernel", type=str, default="Matern_11half", choices=["gaussian","inv_quadratics","Matern_3half","Matern_5half","Matern_7half","Matern_9half","Matern_11half"])
     parser.add_argument("--sigma-scale", type = float, default = 0.25)
     # sigma = args.sigma-scale*sqrt(dim)
     
-    parser.add_argument("--N_domain", type = int, default = 1000)
-    parser.add_argument("--N_boundary", type = int, default = 200)
+    parser.add_argument("--N_domain", type = int, default = 2000)
+    parser.add_argument("--N_boundary", type = int, default = 400)
     parser.add_argument("--N_test", type = int, default = 4000)
     parser.add_argument("--nugget", type = float, default = 1e-10)
-    parser.add_argument("--GNsteps", type = int, default = 4)
+    parser.add_argument("--GNsteps", type = int, default = 3)
     parser.add_argument("--logroot", type=str, default='./logs/')
     parser.add_argument("--randomseed", type=int, default=1)
-    parser.add_argument("--num_exp", type=int, default=2)
+    parser.add_argument("--num_exp", type=int, default=1)
     args = parser.parse_args()    
     return args
 

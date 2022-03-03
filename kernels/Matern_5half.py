@@ -1,58 +1,91 @@
 import jax.numpy as jnp
-from jax import grad, jvp, hessian,jit
 
-eps = 1e-8
+eps = 0.0
 
 def kappa(x,y,d,sigma):
     dist = jnp.sqrt(jnp.sum((x-y)**2 + eps))
     val = (1+jnp.sqrt(5)*dist/sigma+5*dist**2/(3*sigma**2)) * jnp.exp(-jnp.sqrt(5)*dist/sigma)
     return val
-@jit
+
 def D_wy_kappa(x,y,d, sigma,w):
-    _, val = jvp(lambda y: kappa(x,y,d,sigma),(y,),(w,))
-    return val
-@jit
-def Delta_y_kappa(x,y,d,sigma):
-    val = jnp.trace(hessian(lambda y: kappa(x,y,d,sigma))(y))
+    t = jnp.sqrt(jnp.sum((x-y)**2 + eps))
+    a = sigma
+    
+    DF = -5*(a+jnp.sqrt(5)*t)*jnp.exp(-jnp.sqrt(5)*t/a)/(3*a**3)
+    val = -DF*sum((x-y)*w)
     return val
 
-@jit
+def Delta_y_kappa(x,y,d,sigma):
+    t = jnp.sqrt(jnp.sum((x-y)**2 + eps))
+    a = sigma
+    D2F = -5*(d*a**2+jnp.sqrt(5)*d*a*t-5*t**2)/(3*a**4) * jnp.exp(-jnp.sqrt(5)*t/a)
+    val = D2F
+    return val
+
 def D_wx_kappa(x,y,d, sigma,w):
-    _, val = jvp(lambda x: kappa(x,y,d,sigma),(x,),(w,))
+    t = jnp.sqrt(jnp.sum((x-y)**2 + eps))
+    a = sigma
+    DF = -5*(a+jnp.sqrt(5)*t)*jnp.exp(-jnp.sqrt(5)*t/a)/(3*a**3)
+    val = DF*sum((x-y)*w)
     return val
 
 # Dx vector
-@jit
 def D_x_kappa(x,y,d, sigma):
-    val = grad(lambda x: kappa(x,y,d,sigma))(x)
+    t = jnp.sqrt(jnp.sum((x-y)**2 + eps))
+    a = sigma
+    DF = -5*(a+jnp.sqrt(5)*t)*jnp.exp(-jnp.sqrt(5)*t/a)/(3*a**3)
+    val = DF*(x-y)
     return val
-@jit
+
 def D_wx_D_wy_kappa(x,y,d,sigma,wx,wy):
-    _, val = jvp(lambda x: D_wy_kappa(x,y,d,sigma,wy),(x,),(wx,))
+    t = jnp.sqrt(jnp.sum((x-y)**2 + eps))
+    a = sigma
+    DF = -5*(a+jnp.sqrt(5)*t)*jnp.exp(-jnp.sqrt(5)*t/a)/(3*a**3)
+    DDF = 25*jnp.exp(-jnp.sqrt(5)*t/a)/(3*a**4)
+    vec = x-y
+    val = sum(-wx*wy)*DF+sum(wx*vec)*sum(-wy*vec)*DDF
     return val
 
 # # DxDwy vector
-@jit
 def D_x_D_wy_kappa(x,y,d,sigma,wy):
-    val = grad(lambda x: D_wy_kappa(x,y,d,sigma,wy))(x)
+    t = jnp.sqrt(jnp.sum((x-y)**2 + eps))
+    a = sigma
+    DF = -5*(a+jnp.sqrt(5)*t)*jnp.exp(-jnp.sqrt(5)*t/a)/(3*a**3)
+    DDF = 25*jnp.exp(-jnp.sqrt(5)*t/a)/(3*a**4)
+    vec = x-y
+    val = -wy*DF + vec*sum(-wy*vec)*DDF
     return val
-@jit
+
 def D_wx_Delta_y_kappa(x,y, d,sigma,w):
-    val = jnp.trace(hessian(lambda y: D_wx_kappa(x,y,d, sigma,w))(y))
+    t = jnp.sqrt(jnp.sum((x-y)**2 + eps))
+    a = sigma
+    D3F = 25*jnp.exp(-jnp.sqrt(5)*t/a)*(a*(2+d)-jnp.sqrt(5)*t)/(3*a**5)
+    vec = x-y
+    val = D3F*sum(vec*w)
     return val
 
 # # Delta
-@jit
 def Delta_x_kappa(x,y,d,sigma):
-    val = jnp.trace(hessian(lambda x: kappa(x,y,d, sigma))(x))
+    t = jnp.sqrt(jnp.sum((x-y)**2 + eps))
+    a = sigma
+    D2F = -5*(d*a**2+jnp.sqrt(5)*d*a*t-5*t**2)/(3*a**4) * jnp.exp(-jnp.sqrt(5)*t/a)
+    
+    val = D2F
     return val
-@jit
+
 def Delta_x_D_wy_kappa(x,y, d,sigma,w):
-    val = jnp.trace(hessian(lambda x: D_wy_kappa(x,y,d, sigma,w))(x))
+    t = jnp.sqrt(jnp.sum((x-y)**2 + eps))
+    a = sigma
+    D3F = 25*jnp.exp(-jnp.sqrt(5)*t/a)*(a*(2+d)-jnp.sqrt(5)*t)/(3*a**5)
+    vec = x-y
+    val = -D3F*sum(vec*w)
     return val
-@jit
+
 def Delta_x_Delta_y_kappa(x,y,d,sigma):
-    val = jnp.trace(hessian(lambda x: Delta_y_kappa(x,y,d, sigma))(x))
+    t = jnp.sqrt(jnp.sum((x-y)**2 + eps))
+    a = sigma
+    D4F = 25*(d*(d+2)*a**2-(3+2*d)*jnp.sqrt(5)*a*t+5*t**2)/(3*a**6) * jnp.exp(-jnp.sqrt(5)*t/a)
+    val = D4F
     return val
 
 

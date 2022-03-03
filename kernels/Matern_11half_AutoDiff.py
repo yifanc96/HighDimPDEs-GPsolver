@@ -1,15 +1,12 @@
 import jax.numpy as jnp
 from jax import grad, jvp, hessian
 
+eps = 1e-8
 
-def kappa(x,y,d,sigma, p = 1):
-    # dist = jnp.sqrt((x-y)**2 + eps)
-    # val = jnp.exp((jnp.sum(jnp.cos(p*jnp.pi*dist)-1))/sigma**2)
-    
-    dist = jnp.sum((jnp.cos(2*p*jnp.pi*x)-jnp.cos(2*p*jnp.pi*y))**2 + (jnp.sin(2*p*jnp.pi*x)-jnp.sin(2*p*jnp.pi*y))**2) # simplify it later!
-    val = jnp.exp(-dist/sigma**2)
+def kappa(x,y,d,sigma):
+    dist = jnp.sqrt(jnp.sum((x-y)**2 + eps))
+    val = (945*sigma**5+945*jnp.sqrt(11)*sigma**4*dist+4620*sigma**3*dist**2+1155*jnp.sqrt(11)*sigma**2*dist**3+1815*sigma*dist**4+121*jnp.sqrt(11)*dist**5)/(945*sigma**5)*jnp.exp(-jnp.sqrt(11)*dist/sigma)
     return val
-
 
 def D_wy_kappa(x,y,d, sigma,w):
     _, val = jvp(lambda y: kappa(x,y,d,sigma),(y,),(w,))
@@ -54,26 +51,6 @@ def Delta_x_Delta_y_kappa(x,y,d,sigma):
     val = jnp.trace(hessian(lambda x: Delta_y_kappa(x,y,d, sigma))(x))
     return val
 
-# high order derivatives
-def D_wy_Delta_y_kappa(x,y,d, sigma,w):
-    _, val = jvp(lambda y: Delta_y_kappa(x,y,d,sigma),(y,),(w,))
-    return val
-
-def D_wx_Delta_x_kappa(x,y,d, sigma,w):
-    _, val = jvp(lambda x: Delta_x_kappa(x,y,d,sigma),(x,),(w,))
-    return val
-
-def D_wx_Delta_x_D_wy_kappa(x,y,d,sigma,wx,wy):
-    _, val = jvp(lambda y: D_wx_Delta_x_kappa(x,y,d, sigma,wx),(y,),(wy,))
-    return val
-
-def D_wx_D_wy_Delta_y_kappa(x,y,d,sigma,wx,wy):
-    _, val = jvp(lambda x: D_wy_Delta_y_kappa(x,y,d,sigma,wy),(x,),(wx,))
-    return val
-
-def D_wx_Delta_x_D_wy_Delta_y_kappa(x,y,d,sigma,wx,wy):
-    val = jnp.trace(hessian(lambda x: D_wx_D_wy_Delta_y_kappa(x,y,d,sigma,wx,wy))(x))
-    return val
 
 # test
 # x = jnp.array([0.0,0.0])
@@ -81,8 +58,7 @@ def D_wx_Delta_x_D_wy_Delta_y_kappa(x,y,d,sigma,wx,wy):
 # w = jnp.array([1.0,1.0])
 # d = 2
 # sigma = 0.2
-# # print(D_wx_D_wy_kappa(x,y,d,sigma,w,w))
-# print(D_wx_Delta_x_D_wy_Delta_y_kappa(x,y,d,sigma,w,w))
+# print(D_wx_D_wy_kappa(x,y,d,sigma,w,w))
 
 
 
