@@ -1,5 +1,4 @@
 import jax.numpy as jnp
-from jax import jvp, hessian, grad
 
 def kappa(x1, x2, y1, y2, sigma):
     sdist1 = sum((x1-y1)**2)
