@@ -28,7 +28,7 @@ def get_parser():
     
     parser.add_argument("--N_domain", type = int, default = 1000)
     parser.add_argument("--nugget", type = float, default = 1e-10)
-    parser.add_argument("--GNsteps", type = int, default = 4)
+    parser.add_argument("--GNsteps", type = int, default = 3)
     parser.add_argument("--logroot", type=str, default='./logs/')
     parser.add_argument("--randomseed", type=int, default=9999)
     parser.add_argument("--num_exp", type=int, default=1)
