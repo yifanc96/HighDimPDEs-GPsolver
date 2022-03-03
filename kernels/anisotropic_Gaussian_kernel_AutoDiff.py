@@ -4,7 +4,7 @@ from jax import jvp, hessian, grad
 def kappa(x1, x2, y1, y2, sigma):
     sdist1 = sum((x1-y1)**2)
     sdist2 = sum((x2-y2)**2)
-    return jnp.exp(-sdist1/sigma[0]**2 - sdist2/sigma[1]**2)
+    return jnp.exp(-sdist1/(2*sigma[0]**2) - sdist2/(2*sigma[1]**2))
 
 # cover derivatives over x1 and y1
 
