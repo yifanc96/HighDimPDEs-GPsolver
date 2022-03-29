@@ -259,7 +259,7 @@ if __name__ == '__main__':
         # train points
         sol_truth = vmap(u)(X_domain[:,:d_x],X_domain[:,d_x:])[:,onp.newaxis]
         err = abs(sol-sol_truth)
-        err_2 = onp.linalg.norm(err,'fro')/(N_domain)
+        err_2 = onp.linalg.norm(err,'fro')/(onp.sqrt(N_domain))
         train_err_2_all.append(err_2)
         err_inf = onp.max(err)
         train_err_inf_all.append(err_inf)
@@ -267,7 +267,7 @@ if __name__ == '__main__':
         # test points
         sol_truth = vmap(u)(X_test[:,:d_x],X_test[:,d_x:])[:,onp.newaxis]
         err = abs(sol_test-sol_truth)
-        err_2 = onp.linalg.norm(err,'fro')/(N_test)
+        err_2 = onp.linalg.norm(err,'fro')/(onp.sqrt(N_test))
         test_err_2_all.append(err_2)
         err_inf = onp.max(err)
         test_err_inf_all.append(err_inf)

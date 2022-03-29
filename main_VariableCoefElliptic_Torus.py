@@ -189,7 +189,7 @@ if __name__ == '__main__':
         logging.info('[Calculating errs at collocation points ...]')
         sol_truth = vmap(u)(X_domain)[:,onp.newaxis]
         err = abs(sol-sol_truth)
-        err_2 = onp.linalg.norm(err,'fro')/(N_domain)
+        err_2 = onp.linalg.norm(err,'fro')/(onp.sqrt(N_domain))
         err_2_all.append(err_2)
         err_inf = onp.max(err)
         err_inf_all.append(err_inf)

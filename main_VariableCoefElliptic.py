@@ -18,19 +18,19 @@ import os
 def get_parser():
     parser = argparse.ArgumentParser(description='NonLinElliptic equation GP solver')
     parser.add_argument("--freq_a", type=float, default = 1.0)
-    parser.add_argument("--freq_u", type=float, default = 4.0)
+    parser.add_argument("--freq_u", type=float, default = 1.0)
     parser.add_argument("--alpha", type=float, default = 1.0)
     parser.add_argument("--m", type = int, default = 3)
-    parser.add_argument("--dim", type = int, default = 2)
-    parser.add_argument("--kernel", type=str, default="Matern_11half", choices=["gaussian","inv_quadratics","Matern_3half","Matern_5half","Matern_7half","Matern_9half","Matern_11half"])
-    parser.add_argument("--sigma-scale", type = float, default = 0.25)
+    parser.add_argument("--dim", type = int, default = 8)
+    parser.add_argument("--kernel", type=str, default="inv_quadratics", choices=["gaussian","inv_quadratics","Matern_3half","Matern_5half","Matern_7half","Matern_9half","Matern_11half"])
+    parser.add_argument("--sigma-scale", type = float, default = 0.5)
     # sigma = args.sigma-scale*sqrt(dim)
     
-    parser.add_argument("--N_domain", type = int, default = 2000)
-    parser.add_argument("--N_boundary", type = int, default = 400)
+    parser.add_argument("--N_domain", type = int, default = 4000)
+    parser.add_argument("--N_boundary", type = int, default = 800)
     parser.add_argument("--N_test", type = int, default = 4000)
-    parser.add_argument("--nugget", type = float, default = 1e-10)
-    parser.add_argument("--GNsteps", type = int, default = 3)
+    parser.add_argument("--nugget", type = float, default = 1e-5)
+    parser.add_argument("--GNsteps", type = int, default = 6)
     parser.add_argument("--logroot", type=str, default='./logs/')
     parser.add_argument("--randomseed", type=int, default=1)
     parser.add_argument("--num_exp", type=int, default=1)
@@ -182,7 +182,7 @@ if __name__ == '__main__':
         return grad(a)(x)
     @jit
     def u(x): # a = exp [sin(freq_u*sum(cos(x)))]
-        return jnp.sin(jnp.sum(args.freq_u * jnp.cos(x)))
+        return jnp.exp(jnp.sin(jnp.sum(args.freq_u * jnp.cos(x))))
     @jit
     def f(x):
         return -a(x) * jnp.trace(hessian(u)(x))- jnp.sum(grad(a)(x) * grad(u)(x)) + alpha*(u(x)**m)
@@ -247,17 +247,17 @@ if __name__ == '__main__':
         
         # train points error
         err = abs(sol-sol_truth)
-        err_2 = onp.linalg.norm(err,'fro')/(N_domain)
+        err_2 = onp.linalg.norm(err,'fro')/onp.linalg.norm(sol_truth,'fro')
         train_err_2_all.append(err_2)
-        err_inf = onp.max(err)
+        err_inf = onp.max(err)/onp.max(abs(sol_truth))
         train_err_inf_all.append(err_inf)
         
         # test points error
         sol_truth = vmap(u)(X_test)[:,onp.newaxis]
         err = abs(sol_test-sol_truth)
-        err_2 = onp.linalg.norm(err,'fro')/(N_test)
+        err_2 = onp.linalg.norm(err,'fro')/onp.linalg.norm(sol_truth,'fro')
         test_err_2_all.append(err_2)
-        err_inf = onp.max(err)
+        err_inf = onp.max(err)/onp.max(abs(sol_truth))
         test_err_inf_all.append(err_inf)
         
         logging.info(f'[L infinity error] train {train_err_inf_all[-1]}, test {test_err_inf_all[-1]}')

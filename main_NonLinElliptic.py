@@ -20,15 +20,15 @@ def get_parser():
     parser = argparse.ArgumentParser(description='NonLinElliptic equation GP solver')
     parser.add_argument("--alpha", type=float, default = 1.0)
     parser.add_argument("--m", type = int, default = 3)
-    parser.add_argument("--dim", type = int, default = 2)
-    parser.add_argument("--kernel", type=str, default="Matern_5half", choices=["gaussian","inv_quadratics","Matern_3half","Matern_5half","Matern_7half","Matern_9half","Matern_11half"])
-    parser.add_argument("--sigma-scale", type = float, default = 0.25)
+    parser.add_argument("--dim", type = int, default = 5)
+    parser.add_argument("--kernel", type=str, default="inv_quadratics", choices=["gaussian","inv_quadratics","Matern_3half","Matern_5half","Matern_7half","Matern_9half","Matern_11half"])
+    parser.add_argument("--sigma-scale", type = float, default = 0.5)
     # sigma = args.sigma-scale*sqrt(dim)
     
     parser.add_argument("--N_domain", type = int, default = 2000)
     parser.add_argument("--N_boundary", type = int, default = 400)
-    parser.add_argument("--nugget", type = float, default = 1e-10)
-    parser.add_argument("--GNsteps", type = int, default = 4)
+    parser.add_argument("--nugget", type = float, default = 1e-6)
+    parser.add_argument("--GNsteps", type = int, default = 6)
     parser.add_argument("--logroot", type=str, default='./logs/')
     parser.add_argument("--randomseed", type=int, default=9999)
     args = parser.parse_args()    
@@ -157,8 +157,19 @@ def set_random_seeds(args):
     
 def u(x):
     return jnp.sin(jnp.sum(x))
+
+# freq = 600
+# s = 10.5
+
+# def u(x):
+#     arr_k = jnp.arange(1,freq+1)
+#     ans = jnp.sum(jnp.sin(jnp.pi*arr_k*x[1])*jnp.sin(jnp.pi*arr_k*x[2])/(arr_k**s)) 
+#         # H^t norm squared is sum 1/k^{2s-2t}, so in H^{s-1/2}
+#     return ans
+
 def f(x):
     return -jnp.trace(hessian(u)(x))+alpha*(u(x)**m)
+
 def g(x):
     return u(x)
 
@@ -208,7 +219,7 @@ if __name__ == '__main__':
     logging.info('[Calculating errs at collocation points ...]')
     sol_truth = vmap(u)(X_domain)[:,onp.newaxis]
     err = abs(sol-sol_truth)
-    err_2 = onp.linalg.norm(err,'fro')/(N_domain)
-    err_inf = onp.max(err)
+    err_2 = onp.linalg.norm(err,'fro')/onp.linalg.norm(sol_truth,'fro')
+    err_inf = onp.max(err)/onp.max(sol_truth)
     logging.info(f'[L infinity error] {err_inf}')
     logging.info(f'[L2 error] {err_2}')

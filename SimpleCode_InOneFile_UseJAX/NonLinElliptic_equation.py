@@ -175,7 +175,7 @@ if __name__ == '__main__':
     logging.info('[Calculating errs at collocation points ...]')
     sol_truth = vmap(u)(X_domain)[:,onp.newaxis]
     err = abs(sol-sol_truth)
-    err_2 = onp.linalg.norm(err,'fro')/(N_domain)
+    err_2 = onp.linalg.norm(err,'fro')/(onp.sqrt(N_domain))
     err_inf = onp.max(err)
     logging.info(f'[L infinity error] {err_inf}')
     logging.info(f'[L2 error] {err_2}')
