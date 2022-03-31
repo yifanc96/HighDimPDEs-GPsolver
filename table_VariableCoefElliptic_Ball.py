@@ -233,17 +233,17 @@ if __name__ == '__main__':
             # train
             sol_truth = vmap(u)(X_domain)[:,onp.newaxis]
             err = abs(sol-sol_truth)
-            err_2 = onp.linalg.norm(err,'fro')/onp.linalg.norm(sol_truth,'fro')
+            err_2 = onp.linalg.norm(err,'fro')/onp.sqrt(N_domain)
             train_err_2_all[idx_d,idx_exp] = err_2
-            err_inf = onp.max(err)/onp.max(sol_truth)
+            err_inf = onp.max(err)
             train_err_inf_all[idx_d,idx_exp] = err_inf
             
             # test
             sol_truth = vmap(u)(X_test)[:,onp.newaxis]
             err = abs(sol_test-sol_truth)
-            err_2 = onp.linalg.norm(err,'fro')/onp.linalg.norm(sol_truth,'fro')
+            err_2 = onp.linalg.norm(err,'fro')/onp.sqrt(N_test)
             test_err_2_all[idx_d,idx_exp] = err_2
-            err_inf = onp.max(err)/onp.max(sol_truth)
+            err_inf = onp.max(err)
             test_err_inf_all[idx_d,idx_exp] = err_inf
             
             logging.info(f'[L infinity error] train {train_err_inf_all[idx_d,idx_exp]}, test {test_err_inf_all[idx_d,idx_exp]}')
