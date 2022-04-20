@@ -14,6 +14,16 @@ import datetime
 from time import time
 import os
 
+from scipy.special import gamma
+
+def volumeball(d,R):
+    return onp.pi**(d/2)/gamma(d/2+1)*R**d
+def areasphere(d,R):
+    return d*onp.pi**(d/2)/gamma(d/2+1)*R**(d-1)
+
+def Nbd(N_int,d):
+    return N_int ** (1-1/d) * areasphere(d,1)/volumeball(d-1,1)
+
 # solving -grad(a*grad u) + alpha u^m = f
 def get_parser():
     parser = argparse.ArgumentParser(description='NonLinElliptic equation GP solver')
@@ -22,17 +32,16 @@ def get_parser():
     parser.add_argument("--alpha", type=float, default = 1.0)
     parser.add_argument("--m", type = int, default = 3)
     parser.add_argument("--dim_low", type = int, default = 2)
-    parser.add_argument("--dim_high", type = int, default = 8)
+    parser.add_argument("--dim_high", type = int, default = 6)
     parser.add_argument("--kernel", type=str, default="Matern_9half", choices=["gaussian","inv_quadratics","Matern_3half","Matern_5half","Matern_7half","Matern_9half","Matern_11half"])
     parser.add_argument("--sigma-scale", type = float, default = 0.25)
     # sigma = args.sigma-scale*sqrt(dim)
     
     parser.add_argument("--N_domain", type = int, default = 1000)
-    parser.add_argument("--N_boundary", type = int, default = 200)
     parser.add_argument("--N_test", type = int, default = 4000)
     parser.add_argument("--nugget", type = float, default = 1e-10)
     parser.add_argument("--GNsteps", type = int, default = 8)
-    parser.add_argument("--logroot", type=str, default='./logs/')
+    parser.add_argument("--logroot", type=str, default='./logs_AutoNbd/')
     parser.add_argument("--randomseed", type=int, default=1)
     parser.add_argument("--num_exp", type=int, default=10)
     args = parser.parse_args()    
@@ -152,7 +161,7 @@ def logger(args, level = 'INFO'):
     log_name = 'dim' + str(args.dim_low) +'-' + str(args.dim_high)  + '_kernel' + str(args.kernel)
     logdir = os.path.join(log_root, log_name)
     os.makedirs(logdir, exist_ok=True)
-    log_para = 's' + str(args.sigma_scale) + '_Nd' + str(args.N_domain) + '_Nb' + str(args.N_boundary) + '_Nt' + str(args.N_test) + '_n' + str(args.nugget).replace(".","") + '_fa' + str(args.freq_a) + '_fu' + str(args.freq_u) + '_cos' + '_nexp' + str(args.num_exp)
+    log_para = 's' + str(args.sigma_scale) + '_Nd' + str(args.N_domain) + '_AutoNb' + '_Nt' + str(args.N_test) + '_n' + str(args.nugget).replace(".","") + '_fa' + str(args.freq_a) + '_fu' + str(args.freq_u) + '_cos' + '_nexp' + str(args.num_exp)
     date = str(datetime.datetime.now())
     log_base = date[date.find("-"):date.rfind(".")].replace("-", "").replace(":", "").replace(" ", "_")
     filename = log_para + '_' + log_base + '.log'
@@ -208,7 +217,7 @@ if __name__ == '__main__':
         from kernels.Matern_11half import *
     
     N_domain = args.N_domain
-    N_boundary = args.N_boundary
+    
     N_test = args.N_test
     ratio = args.sigma_scale
     
@@ -224,6 +233,7 @@ if __name__ == '__main__':
     
     for idx_d in range(args.dim_high+1-args.dim_low):
         d = args.dim_low + idx_d
+        N_boundary = int(Nbd(N_domain,d))
         sigma = ratio*onp.sqrt(d)
         logging.info(f'GN step: {GN_step}, d: {d}, sigma: {sigma}, number of points: N_domain {N_domain}, N_boundary {N_boundary}, N_test {N_test}, kernel: {args.kernel}, nugget: {args.nugget}')
         for idx_exp in range(args.num_exp):
