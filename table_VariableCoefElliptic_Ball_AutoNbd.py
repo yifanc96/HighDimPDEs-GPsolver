@@ -33,7 +33,7 @@ def get_parser():
     parser.add_argument("--m", type = int, default = 3)
     parser.add_argument("--dim_low", type = int, default = 2)
     parser.add_argument("--dim_high", type = int, default = 6)
-    parser.add_argument("--kernel", type=str, default="Matern_9half", choices=["gaussian","inv_quadratics","Matern_3half","Matern_5half","Matern_7half","Matern_9half","Matern_11half"])
+    parser.add_argument("--kernel", type=str, default="Matern_7half", choices=["gaussian","inv_quadratics","Matern_3half","Matern_5half","Matern_7half","Matern_9half","Matern_11half"])
     parser.add_argument("--sigma-scale", type = float, default = 0.25)
     # sigma = args.sigma-scale*sqrt(dim)
     
